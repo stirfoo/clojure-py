@@ -50,19 +50,12 @@ def removePair(array, i):
     
 class PersistentHashMap(APersistentMap, IEditableCollection, IObj):
     def __init__(self, *args):
-        """Instantiate a PersistentHashMap
-
-        args must be one of
-
-        * int, INode, bool, object
-        * IPersistentMap, int, INode bool object
-        """
         if len(args) == 4:
-            self._meta = None        # IPersistentMap
-            self.count = args[0]     # int
-            self.root = args[1]      # INode
-            self.hasNull = args[2]   # bool
-            self.noneValue = args[3] # object
+            self._meta = None
+            self.count = args[0]
+            self.root = args[1]
+            self.hasNull = args[2]
+            self.noneValue = args[3]
         elif len(args) == 5:
             self._meta = args[0]
             self.count = args[1]
@@ -126,13 +119,7 @@ class PersistentHashMap(APersistentMap, IEditableCollection, IObj):
     def containsKey(self, key):
         if key is None:
             return self.hasNull
-        if self.root is not None:
-            return self.root.find(0, hash(key), key, NOT_FOUND) \
-                is not NOT_FOUND
-        else:
-            return False
-        
-        # return self.root.find(0, hash(key), key, NOT_FOUND) is not NOT_FOUND if self.root is not None else False
+        return self.root.find(0, hash(key), key, NOT_FOUND) is not NOT_FOUND if self.root is not None else False
 
     def __repr__(self):
         s = []
