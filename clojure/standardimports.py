@@ -13,6 +13,8 @@ from clojure.lang.cljexceptions import *
 from clojure.lang.sequential import Sequential
 import clojure
 
+
+import new
 import dis
 import sys
 

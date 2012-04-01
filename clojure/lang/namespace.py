@@ -7,7 +7,7 @@ from clojure.lang.cljexceptions import (InvalidArgumentException,
                                         IllegalArgumentException)
 import clojure.lang.rt as RT
 from clojure.lang.symbol import Symbol, symbol
-import sys, types
+import sys, new
 
 namespaces = AtomicReference(EMPTY_MAP)
 
@@ -36,7 +36,7 @@ def findOrCreateIn(module, parts):
     parts = parts[1:]
     if hasattr(module, part):
         return findOrCreateIn(getattr(module, part), parts)
-    mod = types.ModuleType(module.__name__ + "." + part)
+    mod = new.module(module.__name__ + "." + part)
     setattr(module, part, mod)
     return findOrCreateIn(mod, parts)
     
@@ -49,7 +49,7 @@ def findOrCreate(name):
     if name in sys.modules:
         return sys.modules[name]
 
-    mod = types.ModuleType(name)
+    mod = new.module(name)
     sys.modules[name] = mod
 
     addDefaultImports(mod)
@@ -57,7 +57,7 @@ def findOrCreate(name):
 
 def remove(name):
 
-    if isinstance(name, types.ModuleType):
+    if isinstance(name, new.module):
         name = name.__name__
     if isinstance(name, Symbol):
         name = name.name
@@ -72,7 +72,8 @@ def remove(name):
 
 def find(name, fromns = None):
     from clojure.lang.symbol import Symbol
-    if isinstance(name, types.ModuleType):
+    import new
+    if isinstance(name, new.module):
         return name
     if isinstance(name, Symbol):
         name = name.name

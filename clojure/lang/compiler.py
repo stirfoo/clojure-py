@@ -1,6 +1,7 @@
 import __builtin__
 import dis
 import marshal
+import new
 import pickle
 import py_compile
 import re
@@ -27,7 +28,6 @@ from clojure.lang.var import Var, define, intern as internVar, var as createVar
 from clojure.util.byteplay import *
 import clojure.util.byteplay as byteplay
 import marshal
-import types
 
 _MACRO_ = keyword(symbol("macro"))
 version = (sys.version_info[0] * 10) + sys.version_info[1]
@@ -460,7 +460,7 @@ def compileFn(comp, name, form, orgform):
     code = expandMetas(code, comp)
     c = Code(code, clist, args, lastisargs, False, True, str(symbol(comp.getNS().__name__, name.name)), comp.filename, 0, None)
     if not clist:
-        c = types.FunctionType(c.to_code(), comp.ns.__dict__, name.name)
+        c = new.function(c.to_code(), comp.ns.__dict__, name.name)
 
     return [(LOAD_CONST, c)], c
 
@@ -565,7 +565,7 @@ def compileMultiFn(comp, name, form):
     code = expandMetas(code, comp)
     c = Code(code, clist, argslist, hasvararg, False, True, str(symbol(comp.getNS().__name__, name.name)), comp.filename, 0, None)
     if not clist:
-        c = types.FunctionType(c.to_code(), comp.ns.__dict__, name.name)
+        c = new.function(c.to_code(), comp.ns.__dict__, name.name)
     return [(LOAD_CONST, c)], c
 
 
@@ -1311,7 +1311,7 @@ class Compiler(object):
                 c.extend(self.compileForm(itm))
             elif itm is None:
                 c.extend(self.compileNone(itm))
-            elif type(itm) in [str, int, types.ClassType, type]:
+            elif type(itm) in [str, int, new.classobj, type]:
                 c.extend([(LOAD_CONST, itm)])
             elif isinstance(itm, IPersistentVector):
                 c.extend(compileVector(self, itm))
