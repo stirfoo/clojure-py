@@ -1,3 +1,3 @@
-import clojure.lang
-import clojure.main
-import clojure.core
+import lang
+import main
+import core
