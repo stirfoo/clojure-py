@@ -139,7 +139,7 @@ def compileDef(comp, form):
     else:
         ns = sym.ns
 
-    comp.pushName(RT.name(sym))
+    comp.pushName(sym.name)
     code = []
     v = internVar(comp.getNS(), sym)
     v.setDynamic(True)
@@ -456,7 +456,7 @@ def compileFn(comp, name, form, orgform):
     code.append((RETURN_VALUE,None))
     comp.popAliases(locals)
 
-    clist = map(lambda x: RT.name(x.sym), comp.closureList())
+    clist = map(lambda x: x.sym.name, comp.closureList())
     code = expandMetas(code, comp)
     c = Code(code, clist, args, lastisargs, False, True, str(symbol(comp.getNS().__name__, name.name)), comp.filename, 0, None)
     if not clist:
@@ -561,7 +561,7 @@ def compileMultiFn(comp, name, form):
         code.append((CALL_FUNCTION, 0))
         code.append((RAISE_VARARGS, 1))
 
-    clist = map(lambda x: RT.name(x.sym), comp.closureList())
+    clist = map(lambda x: x.sym.name, comp.closureList())
     code = expandMetas(code, comp)
     c = Code(code, clist, argslist, hasvararg, False, True, str(symbol(comp.getNS().__name__, name.name)), comp.filename, 0, None)
     if not clist:
@@ -642,8 +642,8 @@ def compileFNStar(comp, form):
         for x in clist:
             if x is not selfalias:   #we'll populate selfalias later
                 fcode.extend(comp.getAlias(x.sym).compile(comp))  # Load our local version
-                fcode.append((STORE_DEREF, RT.name(x.sym)))            # Store it in a Closure Cell
-            fcode.append((LOAD_CLOSURE, RT.name(x.sym)))           # Push the cell on the stack
+                fcode.append((STORE_DEREF, x.sym.name))            # Store it in a Closure Cell
+            fcode.append((LOAD_CLOSURE, x.sym.name))           # Push the cell on the stack
         fcode.append((BUILD_TUPLE, len(clist)))
         fcode.extend(code)
         fcode.append((MAKE_CLOSURE, 0))
@@ -992,9 +992,9 @@ class FnArgument(AAlias):
         AAlias.__init__(self, rest)
         self.sym = sym
     def compile(self, comp):
-        return [(LOAD_FAST, RT.name(self.sym))]
+        return [(LOAD_FAST, self.sym.name)]
     def compileSet(self, comp):
-        return [(STORE_FAST, RT.name(self.sym))]
+        return [(STORE_FAST, self.sym.name)]
 
 
 class RenamedLocal(AAlias):
@@ -1002,11 +1002,11 @@ class RenamedLocal(AAlias):
     def __init__(self, sym, rest = None):
         AAlias.__init__(self, rest)
         self.sym = sym
-        self.newsym = symbol(RT.name(sym) + str(RT.nextID()))
+        self.newsym = symbol(sym.name + str(RT.nextID()))
     def compile(self, comp):
-        return [(LOAD_FAST, RT.name(self.newsym))]
+        return [(LOAD_FAST, self.newsym.name)]
     def compileSet(self, comp):
-        return [(STORE_FAST, RT.name(self.newsym))]
+        return [(STORE_FAST, self.newsym.name)]
 
 
 class Closure(AAlias):
@@ -1019,9 +1019,9 @@ class Closure(AAlias):
         return self.isused
     def compile(self, comp):
         self.isused = True
-        return [(LOAD_DEREF, RT.name(self.sym))]
+        return [(LOAD_DEREF, self.sym.name)]
     def compileSet(self, comp):
-        return [(STORE_DEREF, RT.name(self.sym))]
+        return [(STORE_DEREF, self.sym.name)]
 
 
 class LocalMacro(AAlias):
@@ -1232,7 +1232,7 @@ class Compiler(object):
 
     def compileAccessList(self, sym):
         if sym.ns == 'py':
-            return [(LOAD_CONST, getBuiltin(RT.name(sym)))]
+            return [(LOAD_CONST, getBuiltin(sym.name))]
 
         code = self.getAccessCode(sym)
         return code
@@ -1242,32 +1242,32 @@ class Compiler(object):
            or sym.ns is None:
             if self.getNS() is None:
                 raise CompilerException("no namespace has been defined", None)
-            if not hasattr(self.getNS(), RT.name(sym)):
+            if not hasattr(self.getNS(), sym.name):
                 raise CompilerException("could not resolve '" + str(sym) + "', '" \
-                                        + RT.name(sym) + "' not found in " + self.getNS().__name__ +
+                                        + sym.name + "' not found in " + self.getNS().__name__ +
                                         " reference " + str(self.getNamesString(False)), None)
-            var = getattr(self.getNS(), RT.name(sym))
-            return [GlobalPtr(self.getNS(), RT.name(sym))]
+            var = getattr(self.getNS(), sym.name)
+            return [GlobalPtr(self.getNS(), sym.name)]
 
         if hasattr(self.getNS(), "__aliases__") and \
             symbol(sym.ns) in self.getNS().__aliases__:
-            sym = symbol(self.getNS().__aliases__[symbol(sym.ns)].__name__, RT.name(sym))
+            sym = symbol(self.getNS().__aliases__[symbol(sym.ns)].__name__, sym.name)
 
         splt = []
         if sym.ns is not None:
             module = findNamespace(sym.ns)
-            if not hasattr(module, RT.name(sym)):
-                raise CompilerException(str(module) + " does not define " + RT.name(sym), None)
-            return [GlobalPtr(module, RT.name(sym))]
+            if not hasattr(module, sym.name):
+                raise CompilerException(str(module) + " does not define " + sym.name, None)
+            return [GlobalPtr(module, sym.name)]
 
         code = LOAD_ATTR if sym.ns else LOAD_GLOBAL
-        #if not sym.ns and RT.name(sym).find(".") != -1 and RT.name(sym) != "..":
+        #if not sym.ns and sym.name.find(".") != -1 and sym.name != "..":
         raise CompilerException("unqualified dotted forms not supported: " + str(sym), sym)
 
-        if len(RT.name(sym).replace(".", "")):
-            splt.extend((code, attr) for attr in RT.name(sym).split("."))
+        if len(sym.name.replace(".", "")):
+            splt.extend((code, attr) for attr in sym.name.split("."))
         else:
-            splt.append((code, RT.name(sym)))
+            splt.append((code, sym.name))
         return splt
 
     def compileSymbol(self, sym):
