@@ -28,7 +28,13 @@ class APersistentSet(IPersistentSet, IFn, IPrintable):
         self.impl = impl
         self._hash = -1
 
-    def __getitem__(self, item):
+    # def __getitem__(self, item):
+    #     """Return item if found in this set, else None.
+
+    #     item -- any object"""
+    #     return self.impl[item]
+
+    def get(self, item):
         """Return item if found in this set, else None.
 
         item -- any object"""
@@ -70,7 +76,7 @@ class APersistentSet(IPersistentSet, IFn, IPrintable):
             return False
 
         for s in self.impl:
-            if s not in other or not other[s] == self[s]:
+            if s not in other.impl: # or not other[s] == self[s]:
                 return False
         return True
 

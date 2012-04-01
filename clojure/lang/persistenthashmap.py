@@ -132,6 +132,8 @@ class PersistentHashMap(APersistentMap, IEditableCollection, IObj):
         else:
             return False
         
+        # return self.root.find(0, hash(key), key, NOT_FOUND) is not NOT_FOUND if self.root is not None else False
+
     def __repr__(self):
         s = []
         for x in self:

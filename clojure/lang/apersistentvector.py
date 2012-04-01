@@ -5,9 +5,11 @@ March 25, 2012 -- documented
 import cStringIO
 
 import clojure.lang.rt as RT
+from clojure.lang.pytypes import *
 from clojure.lang.iobj import IObj
 from clojure.lang.iprintable import IPrintable
 from clojure.lang.indexableseq import IndexableSeq
+from clojure.lang.ipersistentmap import IPersistentMap
 from clojure.lang.ipersistentset import IPersistentSet
 from clojure.lang.ipersistentvector import IPersistentVector
 from clojure.lang.cljexceptions import AbstractMethodCall, ArityException
@@ -43,12 +45,17 @@ class APersistentVector(IPersistentVector, IPrintable):
     def __eq__(self, other):
         """Equality test.
 
-        other -- ISeq or something that implements the seq protocol
+        other -- Unknown at this time
 
         ASeq.__eq__ is actually used."""
         if self is other:
             return True
-        if not RT.isSeqable(other) or isinstance(other, IPersistentSet):
+        if not RT.isSeqable(other) or isinstance(other, (IPersistentSet,
+                                                         # can seq on these
+                                                         IPersistentMap,
+                                                         pySetType,
+                                                         pyStrType,
+                                                         pyUnicodeType)):
             return False
         s = self.seq()
         o = RT.seq(other)

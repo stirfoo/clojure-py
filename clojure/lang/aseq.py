@@ -6,6 +6,7 @@ import cStringIO
 
 import clojure.lang.rt as RT
 from clojure.lang.obj import Obj
+from clojure.lang.pytypes import *
 from clojure.lang.iseq import ISeq
 from clojure.lang.counted import Counted
 from clojure.lang.ihasheq import IHashEq
@@ -21,7 +22,12 @@ class ASeq(Obj, Sequential, ISeq, IHashEq, Iterable, IPrintable):
     def __eq__(self, other):
         if self is other:
             return True
-        if not RT.isSeqable(other) or isinstance(other, IPersistentSet):
+        if not RT.isSeqable(other) or isinstance(other, (IPersistentSet,
+                                                         # can seq on these
+                                                         IPersistentMap,
+                                                         pySetType,
+                                                         pyStrType,
+                                                         pyUnicodeType)):
             return False
         se = RT.seq(other)
         # XXX: don't think this is used

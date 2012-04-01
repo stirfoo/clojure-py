@@ -54,6 +54,16 @@ class APersistentMap(IPersistentMap, IPrintable):
     # def __hash__(self):
     #     return mapHash(self)
 
+    def __hash__(self):
+        h = 0
+        s = self.seq()
+        while s is not None:
+            e = s.first()
+            k, v = e.getKey(), e.getValue()
+            h += (8546432 if k is None else k) ^ (8546432 if v is None else v)
+            s = s.next()
+        return h
+    
     def __call__(self, *args, **kwargs):
         return apply(self.valAt, args)
 
@@ -90,30 +100,33 @@ class APersistentMap(IPersistentMap, IPrintable):
 def mapEquals(m1, m2):
     if m1 is m2:
         return True
-    if not hasattr(m2, "__getitem__"):
+    # possibly add dict
+    if not isinstance(m2, APersistentMap):
         return False
-    if not hasattr(m2, "__len__"):
-        return False
-    if not hasattr(m2, "__iter__"):
-        return False
+    # if not hasattr(m2, "__getitem__"):
+    #     return False
+    # if not hasattr(m2, "__len__"):
+    #     return False
+    # if not hasattr(m2, "__iter__"):
+    #     return False
 
     if len(m1) != len(m2):
         return False
 
     for s in m1:
-        if s not in m2 or m2[s] != m1[s]:
+        if s not in m2: # or m2[s] != m1[s]:
             return False
     return True
 
 
-def mapHash(m):
-    return reduce(lambda h, v: h + (0 if v.getKey() is None
-                                      else hash(v.getKey()))
-                                 ^ (0 if v.getValue() is None
-                                      else hash(v.getValue())),
-                  m.interator(),
-                  0)
-
+# XXX: not used
+# def mapHash(m):
+#     return reduce(lambda h, v: h + (0 if v.getKey() is None
+#                                       else hash(v.getKey()))
+#                                  ^ (0 if v.getValue() is None
+#                                       else hash(v.getValue())),
+#                   m.interator(),
+#                   0)
 
 
 class KeySeq(ASeq):
